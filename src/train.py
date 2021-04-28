@@ -3,19 +3,17 @@ from random import randrange
 import numpy as np
 import os
 
-def colorCluster(image):
+def colorCluster(image, k, numRounds):
     im_width, im_height = image.size
     rgbMatrix = np.array(image)
     #print(rgbMatrix)
     #for i in range(100):
     #    rgbMatrix[i,0:50] = [0,0,0]
     # (0,0) is top left corner of image, (0, width) is top right corner of image
-    k = 5
     centers = [[rgbMatrix[randrange(im_height)][randrange(im_width)],rgbMatrix[randrange(im_height)][randrange(im_width)], rgbMatrix[randrange(im_height)][randrange(im_width)]] for i in range(k)]
     clusters = None
-    tmax = 5
-    for i in range(tmax):
-        print('{:100s}'.format('Clustering Round #' + str(i) + ':'))
+    for i in range(numRounds):
+        print('{:100s}'.format('Clustering Round #' + str(i+1) + ':'))
         clusters = [[] for i in range(k)]
         for u in range(im_height):
             for v in range(im_width):
@@ -44,14 +42,10 @@ def colorCluster(image):
                 clusterColors[i][j] = centers[3]
             elif i < 125:
                 clusterColors[i][j] = centers[4]
-    clusterColorsPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/clusterColors.jpg'
+    clusterColorsPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/clusterColors.jpg'
     Image.fromarray(clusterColors).save(clusterColorsPath)
-    print(centers)
-
-    #newDogePath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/newDoge.jpg'
-    #image2 = Image.fromarray(rgbMatrix).save(newDogePath)
-    return
+    return centers
 
 if __name__ == '__main__':
-    dogePath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/doge.jpg'
+    dogePath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/doge.jpg'
     colorCluster(Image.open(dogePath))

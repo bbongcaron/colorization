@@ -21,7 +21,7 @@ def basicAgent(image):
     k = 5
     im_width, im_height = image.size
     # k is number of clusters, 3rd argument is number of rounds of clustering 
-    repColors = train.colorCluster(image, k, 5)
+    repColors = train.colorCluster(image, k, 10)
     rgbIm = np.array(image)
     grayIm = np.array(ImageOps.grayscale(image))
     fiveColoredIm = clusterColors = np.zeros((im_height,im_width,3), dtype=np.uint8)
@@ -39,6 +39,7 @@ def basicAgent(image):
                 distToRepColors[s] = np.linalg.norm(rgbIm[u][v] - repColors[s])
             fiveColoredIm[u][v] = repColors[distToRepColors.index(min(distToRepColors))]
     print('\tDone!')
+    
     for u in range(im_height):
         for v in range(im_width // 2, im_width):
             print('\tColoring Pixel ({:^5s},{:^5s}) with Basic Strategy...'.format(str(v), str(u)), end='\r')
@@ -51,9 +52,9 @@ def basicAgent(image):
                 for x in range(-1,2):
                     for y in range(-1,2):
                         queriedPatch.append(grayIm[u + x][v + y])
-                patchDistances = [-1 for j in range(len(patchCenters))]
                 # Get 1000 patch subsample to compare queried patch to
                 patchCenters, patchMap = getPatchSubsample(grayIm, im_width, im_height)
+                patchDistances = [-1 for j in range(len(patchCenters))]
                 # Find most similar grayscale patches
                 for s in range(len(patchCenters)):
                     patchDistances[s] = np.linalg.norm(np.array(queriedPatch) - np.array(patchMap[patchCenters[s]]))

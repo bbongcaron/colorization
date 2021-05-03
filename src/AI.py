@@ -17,6 +17,13 @@ def getPatchSubsample(grayIm, im_width, im_height):
     keys = [key for key in patchMap]
     return keys, patchMap
 
+def advancedAgent(image):
+    im_width, im_height = image.size
+    #rgbIm = np.array(image)
+    #grayIm = np.array(ImageOps.grayscale(image))
+    #print(rgbIm)
+    #print(rgbIm/255)
+    #train.weightFitting(rgbIm)
 def basicAgent(image):
     k = 5
     im_width, im_height = image.size
@@ -69,4 +76,5 @@ def basicAgent(image):
 
 if __name__ == '__main__':
     dogePath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/smolDoge.jpg'
-    basicAgent(Image.open(dogePath))
+    #basicAgent(Image.open(dogePath))
+    advancedAgent(Image.open(dogePath))

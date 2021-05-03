@@ -1,6 +1,7 @@
-from PIL import Image
+from PIL import Image, ImageOps
 from random import randrange
 from math import exp
+import time
 import numpy as np
 import os
 
@@ -8,13 +9,13 @@ def weightFitting(image):
     im_width, im_height = image.size
     rgbMatrix = np.array(image)
     grayIm = np.array(ImageOps.grayscale(image))
-    alpha = 0.1
-    # Models
-    # r(g) = 255 / (1 + e^[-(w0 + w1*g1 + w2*g2 + w3*g3 + w4*g4 + w5*g5 + w6*g6 + w7*g7 + w8*g8 + w9*g9)])
+    alpha = 0.0001
     wR = [0.5 for i in range(10)]
     wG = [0.5 for i in range(10)]
     wB = [0.5 for i in range(10)]
-    for i in range(10):
+    start = time.time()
+    for s in range(150000):
+        print("Round {:7s}".format(str(s+1)), end='\r')
         randPixel = (randrange(1, im_height - 1), randrange(1, im_width // 2))
         r = rgbMatrix[randPixel[0]][randPixel[1]][0]
         g = rgbMatrix[randPixel[0]][randPixel[1]][1]
@@ -22,14 +23,28 @@ def weightFitting(image):
         gray = [1]
         for x in range(-1,2):
             for y in range(-1,2):
-                gray.append(grayIm[randPixel[0]+x][randPixel[1]+y])
-        Rx = wR[0]*gray[0] + wR[1]*gray[1] + wR[2]*gray[2] + wR[3]*gray[3] + wR[4]*gray[4] + wR[5]*gray[5] + wR[6]*gray[6] + wR[7]*gray[7] + wR[8]*gray[8] + wR[9]*gray[9]
-        Gx = wG[0]*gray[0] + wG[1]*gray[1] + wG[2]*gray[2] + wG[3]*gray[3] + wG[4]*gray[4] + wG[5]*gray[5] + wG[6]*gray[6] + wG[7]*gray[7] + wG[8]*gray[8] + wG[9]*gray[9]
-        Bx = wG[0]*gray[0] + wB[1]*gray[1] + wB[2]*gray[2] + wB[3]*gray[3] + wB[4]*gray[4] + wB[5]*gray[5] + wB[6]*gray[6] + wB[7]*gray[7] + wB[8]*gray[8] + wB[9]*gray[9]
-        predR = 255 / (1 + exp(-1 * Rx))
-        predG = 255 / (1 + exp(-1 * Gx))
-        predB = 255 / (1 + exp(-1 * Bx))
-        
+                gray.append(grayIm[randPixel[0]+x][randPixel[1]+y]/255)
+
+        Rx = sum([wR[i]*gray[i] for i in range(len(wR))])
+        Gx = sum([wG[i]*gray[i] for i in range(len(wG))])
+        Bx = sum([wB[i]*gray[i] for i in range(len(wB))])
+
+        predR = 255.0 / (1 + exp(-1 * Rx))
+        predG = 255.0 / (1 + exp(-1 * Gx))
+        predB = 255.0 / (1 + exp(-1 * Bx))
+
+        gLossR = [(predR - r)*predR*(1 - predR/255.0)*gray[i] for i in range(len(gray))]
+        gLossG = [(predG - g)*predG*(1 - predG/255.0)*gray[i] for i in range(len(gray))]
+        gLossB = [(predB - b)*predB*(1 - predB/255.0)*gray[i] for i in range(len(gray))]
+
+        wR = [wR[i] - alpha*gLossR[i] for i in range(len(wR))]
+        wG = [wG[i] - alpha*gLossG[i] for i in range(len(wG))]
+        wB = [wB[i] - alpha*gLossB[i] for i in range(len(wB))]
+
+    end = time.time()
+    print("Elapsed Time: " + str(end - start) + "s")
+    return wR, wG, wB
+
 def colorCluster(image, k, numRounds):
     im_width, im_height = image.size
     image.show()
@@ -81,10 +96,3 @@ def colorCluster(image, k, numRounds):
     clusterColorsPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/clusterColors.jpg'
     Image.fromarray(clusterColors).save(clusterColorsPath)
     return centers
-
-if __name__ == '__main__':
-    #dogePath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/doge.jpg'
-    #colorCluster(Image.open(dogePath))
-    #arr = np.array([2, 4, 6])
-    #print(arr/2)
-    print(e)

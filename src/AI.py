@@ -1,4 +1,5 @@
 import train
+from math import exp
 from PIL import Image, ImageOps
 from random import randrange
 import numpy as np
@@ -12,18 +13,32 @@ def getPatchSubsample(grayIm, im_width, im_height):
         for x in range(-1,2):
             for y in range(-1,2):
                 patchMap[randPixel].append(grayIm[randPixel[0]+x][randPixel[1]+y])
-    #for key in patchMap:
-        #print(str(key) + " : " + str(patchMap[key]))
     keys = [key for key in patchMap]
     return keys, patchMap
 
 def advancedAgent(image):
     im_width, im_height = image.size
-    #rgbIm = np.array(image)
-    #grayIm = np.array(ImageOps.grayscale(image))
-    #print(rgbIm)
-    #print(rgbIm/255)
-    #train.weightFitting(rgbIm)
+    wR, wG, wB = train.weightFitting(image)
+    grayIm = np.array(ImageOps.grayscale(image))
+    coloredIm = clusterColors = np.zeros((im_height,im_width,3), dtype=np.uint8)
+    for u in range(1, im_height - 1):
+        for v in range(1, im_width - 1):
+            gray = [1]
+            for x in range(-1,2):
+                for y in range(-1,2):
+                    gray.append(grayIm[u+x][v+y]/255)
+            Rx = sum([wR[i]*gray[i] for i in range(len(wR))])
+            Gx = sum([wG[i]*gray[i] for i in range(len(wG))])
+            Bx = sum([wB[i]*gray[i] for i in range(len(wB))])
+            predR = 255.0 / (1 + exp(-1 * Rx))
+            predG = 255.0 / (1 + exp(-1 * Gx))
+            predB = 255.0 / (1 + exp(-1 * Bx))
+            coloredIm[u][v] = [predR, predG, predB]
+    finalImage = Image.fromarray(coloredIm)
+    coloredImPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/advanced.jpg'
+    finalImage.show()
+    finalImage.save(coloredImPath)
+
 def basicAgent(image):
     k = 5
     im_width, im_height = image.size

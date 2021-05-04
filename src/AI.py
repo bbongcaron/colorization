@@ -34,6 +34,7 @@ def advancedAgent(image):
             predG = 255.0 / (1 + exp(-1 * Gx))
             predB = 255.0 / (1 + exp(-1 * Bx))
             coloredIm[u][v] = [predR, predG, predB]
+    # Pathing and Saving
     finalImage = Image.fromarray(coloredIm)
     coloredImPath = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)) + '/images/advanced.jpg'
     finalImage.show()

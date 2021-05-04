@@ -9,6 +9,7 @@ def weightFitting(image):
     im_width, im_height = image.size
     rgbMatrix = np.array(image)
     grayIm = np.array(ImageOps.grayscale(image))
+    # current alpha and weights obtained from many tests
     alpha = 0.0001
     wR = [0.5 for i in range(10)]
     wG = [0.5 for i in range(10)]
@@ -16,6 +17,7 @@ def weightFitting(image):
     start = time.time()
     for s in range(150000):
         print("Round {:7s}".format(str(s+1)), end='\r')
+        # Pick a random pixel and its RGB values
         randPixel = (randrange(1, im_height - 1), randrange(1, im_width // 2))
         r = rgbMatrix[randPixel[0]][randPixel[1]][0]
         g = rgbMatrix[randPixel[0]][randPixel[1]][1]
@@ -29,14 +31,17 @@ def weightFitting(image):
         Gx = sum([wG[i]*gray[i] for i in range(len(wG))])
         Bx = sum([wB[i]*gray[i] for i in range(len(wB))])
 
+        # Update the predicted value using the formula learned in class
         predR = 255.0 / (1 + exp(-1 * Rx))
         predG = 255.0 / (1 + exp(-1 * Gx))
         predB = 255.0 / (1 + exp(-1 * Bx))
 
+        # Calculate the Loss value from performing this.
         gLossR = [(predR - r)*predR*(1 - predR/255.0)*gray[i] for i in range(len(gray))]
         gLossG = [(predG - g)*predG*(1 - predG/255.0)*gray[i] for i in range(len(gray))]
         gLossB = [(predB - b)*predB*(1 - predB/255.0)*gray[i] for i in range(len(gray))]
 
+        # Update the weight values of each color
         wR = [wR[i] - alpha*gLossR[i] for i in range(len(wR))]
         wG = [wG[i] - alpha*gLossG[i] for i in range(len(wG))]
         wB = [wB[i] - alpha*gLossB[i] for i in range(len(wB))]
@@ -46,6 +51,7 @@ def weightFitting(image):
     return wR, wG, wB
 
 def colorCluster(image, k, numRounds):
+    # k Nearest Neighhbors
     im_width, im_height = image.size
     image.show()
     rgbMatrix = np.array(image)
@@ -53,6 +59,8 @@ def colorCluster(image, k, numRounds):
     #for i in range(100):
     #    rgbMatrix[i,0:50] = [0,0,0]
     # (0,0) is top left corner of image, (0, width) is top right corner of image
+    
+    # Pick k random pixels and call them our centers for the clusters
     centers = [[rgbMatrix[randrange(im_height)][randrange(im_width)],rgbMatrix[randrange(im_height)][randrange(im_width)], rgbMatrix[randrange(im_height)][randrange(im_width)]] for i in range(k)]
     for center in centers:
         print(center)
@@ -81,6 +89,7 @@ def colorCluster(image, k, numRounds):
         for center in centers:
             print(center)
     clusterColors = np.zeros((125,125,3), dtype=np.uint8)
+    # Create an image showing which colors have been picked.
     for i in range(125):
         for j in range(125):
             if i < 25:

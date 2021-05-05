@@ -51,6 +51,25 @@ Basic Agent
 \caption{Colors Much, Beauty Such, Woah.}
 \end{figure}
 \section{The Advanced Agent}
+\subsection{The Input/Output/Model Space and Data Pre-Processing}
+\begin{itemize}
+\item Our advanced agent uses 3 different models to obtain the red, green, and blue value of each pixel.
+\item The \textbf{input space} is a vector of *length 10, where the first element is always a 1 and the following 9 elements are the \textit{normalized} grayscale values of a chosen 3x3 grayscale patch.
+\begin{itemize}
+\item *Note that this is done for the purpose of smooth syntax of dot products between weights and inputs.
+\item The meaning of normalized in the context of inputs is discussed with pre-processing.
+\end{itemize}
+\item The \textbf{output space} is a single \textit{normalized} value representing either a red, green, or blue value, depending on the model used (one model per color)
+\begin{itemize}
+\item The meaning of normalized in the context of outputs is discussed with pre-processing.
+\end{itemize}
+\item The \textbf{model space} is a sigmoid function, where $e$ is raised to the negative dot product between the weights of a specific color's model and the normalized grayscale values of a given 3x3 patch. 
+\item The input data for the model as well as the output data for the model are \textbf{both pre-processed} before putting them to use.
+\begin{itemize}
+\item The input data, i.e. the grayscale vector, is normalized to be a value between 0 and 1 by dividing the value obtained from the grayscale image matrix by 255.
+\item The output data, i.e. the red, green, and blue values obtained from their respective models, is scaled up to be a value between 0 and 255 by multiplying the value obtained from the color's respective model by 255.
+\end{itemize}
+\end{itemize}
 \subsection{The Math}
 First, we define the sigmoid function:
 \[
@@ -170,12 +189,7 @@ def weightFitting(image):
         
     return the weights of the colors' models
 \end{verbatim}
-
 This is what is used to update and return the weights of the colors after all the trials. Note $\alpha$ and the initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway, meaning it will avoid overfitting, and the training was fast, so more was done for more consistent colors per test. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent, where it uses them to complete the picture.
-
-For our function, the input space is a grayscale patch in the form of a vector and the output space is the RGB values of the center pixel the function is observing within the grayscale patch. None of the input data, other than the conversions of pixels to grayscale, has been preprocessed or processed outside of the function before being inputted.
-
-\pagebreak
 \subsection{The Results}
 The result of the Advanced AI is shown in Figure 3.
 

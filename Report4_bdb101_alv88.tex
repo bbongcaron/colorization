@@ -171,7 +171,10 @@ def weightFitting(image):
     return the weights of the colors' models
 \end{verbatim}
 
-This is what is used to update and return the weights of the colors after all the trials. Note $\alpha$ and the initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway and the training was fast, so more was done. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent, where it uses them to complete the picture.
+This is what is used to update and return the weights of the colors after all the trials. Note $\alpha$ and the initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway, meaning it will avoid overfitting, and the training was fast, so more was done for more consistent colors per test. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent, where it uses them to complete the picture.
+
+For our function, the input space is a grayscale patch in the form of a vector and the output space is the RGB values of the center pixel the function is observing within the grayscale patch. None of the input data, other than the conversions of pixels to grayscale, has been preprocessed or processed outside of the function before being inputted.
+
 \pagebreak
 \subsection{The Results}
 The result of the Advanced AI is shown in Figure 3.

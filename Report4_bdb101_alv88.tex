@@ -3,13 +3,10 @@
 \usepackage[plain]{algorithm}
 \graphicspath {{graphs/}}
 \usetikzlibrary{automata,positioning}
-
-\topmargin=-0.45in
-\evensidemargin=0in
-\oddsidemargin=0in
-\textwidth=6.5in
-\textheight=9.0in
-\headsep=0.25in
+\usepackage{geometry}\geometry{letterpaper,
+  	left=0.75in, right=0.75in,
+  	top=1in, bottom=1in,
+  	headsep=.2in }
 \title{\textbf{Introduction to Artificial Intelligence\\
 		\large Project 4: Colorization}}
 \author{Brenton Bongcaron and Abe Vitangcol\\NetIDs: bdb101 and alv88}
@@ -34,7 +31,7 @@ To test out our algorithms to see how well it does, we have to use a common imag
 \end{figure}
 
 \section{The Basic Agent}
-To start, the basic agent was necessary as a baseline of how well our advanced algorithm works. The basic agent begins with clustering the colors into 5 best representative colors using k-Nearest Neighbors calculations. Then, the basic agent has 2 arrays, one a grayscale verison of the doge, the other the original image. Using the left half of the grayscale image as training, it replaces 3x3 patches with one of the representative colors accordingly. Then it goes to the right half and tries to fill in the rest of the colors based on what it learned through the training, with a black border around the right half because of how some tiles do not give enough information to complete the image. The result is the following:
+To start, the basic agent was necessary as a baseline of how well our advanced algorithm works. The basic agent begins with clustering the colors into 5 best representative colors using k-Nearest Neighbors calculations. Then, the basic agent has 2 arrays, one a grayscale verison of the doge, the other the original image. Using the left half of the grayscale image as training, it replaces 3x3 patches with one of the representative colors accordingly. Then it goes to the right half and tries to fill in the rest of the colors based on what it learned through the training, with a black border around the right half because of how some tiles do not give enough information to complete the image. The result is shown in Figure 2.
 
 \begin{figure}[h]
 \begin{minipage}[c]{0.5\textwidth}
@@ -54,8 +51,90 @@ Basic Agent
 \caption{Colors Much, Beauty Such, Woah.}
 \end{figure}
 \section{The Advanced Agent}
-The newest question then becomes: can we create something that beats a 5-Nearest Neighbor calculation and create a better image than the basic agent? The answer was a simple one, there always was a way to beat it, specifically, using logistic regression. We do this using a method called in AI.py, named weightFitting:
-
+\subsection{The Math}
+First, we define the sigmoid function:
+\[
+g(z) = \frac{1}{1+e^{-z}}
+\]
+\[
+g'(z) = g(z)(1-g(z))
+\]
+The model that we build for each color returns a value from 0 to 1, which is the normalized R or G or B value that a pixel will be colored with:
+\[
+f_{\underline{wY}}(\underline{x}) = \frac{1}{1 - e^{-(\underline{wY}. \underline{x})}} = \frac{1}{1 - e^{-(Y(\underline{x}))}} = g[Y(\underline{x})]
+\]
+where:
+\begin{itemize}
+\item $\underline{wY}$ is the weights for the weight vector corresponding to the model for color $Y \in \{R, G, B\}$
+\item $\underline{x}$ is the vector containing the \textit{normalized }grayscale values of the grayscale patch corresponding to the pixel to be colored (the real grayscale value is $255\cdot x_j$)
+\item $f_{\underline{wY}}(\underline{x})$ returns a \textit{normalized} value of a color (the real value of the color is $255\cdot f_{\underline{w}}(\underline{x})$)
+\end{itemize}
+We defined our loss function to be a sum of the square error between :
+\[
+\text{Loss}(f_{\underline{w}}(\underline{x}),y) = [\text{y} - 255\cdot f_{\underline{wY}}(\underline{x})]^2 = [\text{y} - 255\cdot g(Y(\underline{x}))]^2
+\]
+where $y$ is the actual value for the color $y \in \{r, g, b\}$ in the original image's matrix.\\\\
+Using the chain rule to start calculating the gradient of the loss function:
+\[
+\frac{\partial}{\partial wY_j}\text{Loss}(f_{\underline{w}}(\underline{x}),y) = \frac{\partial}{\partial wY_j}\left[\text{y} - 255\cdot g(Y(\underline{x}))\right]^2
+\]
+\[
+= 2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot\frac{\partial}{\partial wY_j}[\text{y} - 255g(Y(\underline{x}))]
+\]
+\[
+= 2\cdot\left[y - 255\cdot g(Y(\underline{x}))\right]\cdot\frac{\partial}{\partial wY_j}[-255\cdot g(Y(\underline{x}))] 
+\]
+\[
+=  2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot[-255\cdot g'(Y(\underline{x}))]\cdot\frac{\partial}{\partial wY_j}[Y(\underline{x})]
+\]
+Note that by construction of our definition of our model:
+\[
+Y(\underline{x}) = \underline{wY}.\underline{x} = wY_0\cdot x_0 + wY_1\cdot x_1 + wY_2\cdot x_2 + wY_3\cdot x_3 + wY_4\cdot x_4 + wY_5\cdot x_5 + wY_6\cdot x_6 + wY_7\cdot x_7 + wY_8\cdot x_8 + wY_9\cdot x_9
+\]
+Similar to how it was done in lecture, we define $x_0 = 1$, but we left it in explicit terms of the dot product for smooth notation. Thus:
+\[
+\frac{\partial}{\partial wY_j}[Y(\underline{x})] = x_j
+\]
+where $x_j$ is the $j^{th}$ component of the grayscale vector.\\\\
+Continuing the calculation of the gradient of the loss function:
+\[
+\frac{\partial}{\partial wY_j}\text{Loss}(f_{\underline{w}}(\underline{x}),y) =  2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot[-255\cdot g(Y(\underline{x}))]\cdot\frac{\partial}{\partial wY_j}[Y(\underline{x})]
+\]
+\[
+=  2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot[-255\cdot g'(Y(\underline{x}))]\cdot x_j
+\]
+Plugging in the definition of the derivative of the sigmoid function:
+\[
+=  2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot -255\cdot g(Y(\underline{x}))\cdot(1 - g(Y(\underline{x})))\cdot x_j
+\]
+\[
+=  -2\cdot[y - 255\cdot g(Y(\underline{x}))]\cdot [255\cdot g(Y(\underline{x}))]\cdot(1 - g(Y(\underline{x})))\cdot x_j
+\]
+\[
+=  2\cdot[255\cdot g(Y(\underline{x}))-y]\cdot [255\cdot g(Y(\underline{x}))]\cdot(1-g(Y(\underline{x})))\cdot x_j
+\]
+Thus:
+\[
+\nabla\text{Loss}_{wY_j}(f_{\underline{w}}(\underline{x}),y) =  2\cdot[255\cdot g(Y(\underline{x}))-y]\cdot [255\cdot g(Y(\underline{x}))]\cdot(1-g(Y(\underline{x})))\cdot \underline{x}
+\]
+Using Stochastic Gradient Descent, we now have a formula to update the weights of our color models:
+\[
+\underline{wY}(k+1) = \underline{wY}(k) - \alpha\nabla\text{Loss}_{wY_j}(f_{\underline{w}}(\underline{x}),y)
+\]
+\[
+= \underline{wY}(k) - \alpha\cdot 2\cdot[255\cdot g(Y(\underline{x}))-y]\cdot [255\cdot g(Y(\underline{x}))]\cdot(1-g(Y(\underline{x})))\cdot \underline{x}
+\]
+\[
+= \underline{wY}(k) - \alpha\cdot[255\cdot g(Y(\underline{x}))-y]\cdot [255\cdot g(Y(\underline{x}))]\cdot(1-g(Y(\underline{x})))\cdot \underline{x}
+\]
+Note that the constant $2$ in the gradient of the loss function was absorbed into the learning rate constant.\\\\
+In terms of English words, the formula to update the weights of our color models can be written as:
+\[
+\text{New weights} = (\text{old weights}) - (\text{learning rate})(\text{predicted}-\text{actual})(\text{predicted})(1-\frac{\text{predicted}}{255})(\text{grayscale vector})
+\]
+where "weights" implies the weight vector of a color model.
+\subsection{The Code}
+The following function is pseudo-code for our training algorithm for each of our color models and is located in \verb|train.py|.
 \begin{verbatim}
 def weightFitting(image):
     im_width, im_height <- image.size
@@ -73,77 +152,28 @@ def weightFitting(image):
              for y in range(-1,2):
                   currentPixel <- (randPixel[0]+x, randPixel[1]+y) 
                   gray.append(grayscale value, divded by 255, of currentPixel)
+                  
         # Note that dotP() means dot product
         Rx = dotP(wR, gray)
         Gx = dotP(wG, gray)
         Bx = dotP(wB, gray)
 
         predR = 255.0 / (1 + exp(-1 * Rx))
-        Do the above calculation for the other two colors
+        predG = 255.0 / (1 + exp(-1 * Gx))
+        predB = 255.0 / (1 + exp(-1 * Bx))
 
         gLossR = [(predR - r)*predR*(1 - predR/255.0)*gray[i] for i in range(len(gray))]
-        Do the above calculation for the other two colors
+        gLossG = [(predG - g)*predG*(1 - predG/255.0)*gray[i] for i in range(len(gray))]
+        gLossB = [(predB - b)*predB*(1 - predB/255.0)*gray[i] for i in range(len(gray))]
 
         update the weights of the colors' models
-
+        
     return the weights of the colors' models
 \end{verbatim}
 
-The loss function is defined as:
-\[
-\text{Loss} = (\text{r} - 255\text{sigmoid(Rx)})^2
-\]
-
-And sigmoid is defined as:
-\[
-\text{sigmoid} = \frac{1}{1 - e^{-x}}
-\]
-\[
-\text{sigmoid' (Derivative of sigmoid)} = \text{sigmoid} * (1 - \text{sigmoid}) \text{ or} -\frac{e^{-x}}{(1 - e^{-x})^2}
-\]
-
-By plugging in the sigmoid into the defined loss function and taking the derivative:
-
-\[
-\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) \text{sigmoid'(Rx)}\text{R'x}
-\]
-
-Rx is the dot product between the weights of a color model (red, blue, green) and the grayscale, and the derivative of a dot product is:
-
-\[
-\text{R'x} = \frac{d(\text{grayscale})}{dx}\text{weights} + \frac{d(\text{weights})}{dx}\text{grayscale}
-\]
-
-But with the dot product, taking the derivative of the dot product with respect to x causes R'x to simply return $w_x g_x$ (with w meaning weight and g meaning grayscale value), so, we can plug this in:
-
-\[
-\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) \text{sigmoid'(Rx)}w_x g_x
-\]
-
-This is the derivative of the loss function.
-
-Note that the gradient of the loss function is calculated by the formula:
-\[
-(\text{predicted} - \text{actual})*(\text{predicted})*(1 - \frac{\text{predicted}}{255.0}) * \text{grayscale value}
-\]
-
-Which was shown in doing the above calculations and by plugging in the values we were given. The predicted color value(for each color) is:
-\[
-R = \frac{255.0}{(1 - e^{dotP(wR, gray)})}
-\]
-\[
-G = \frac{255.0}{(1 - e^{dotP(wG, gray)})}
-\]
-\[
-B = \frac{255.0}{(1 - e^{dotP(wB, gray)})}
-\]
-where dotP() denotes dot product.
-Note the Color Sum where is says "Rx", "Gx", and "Bx" in the code. After doing all of this, one update is done on all of the weighted values of the colors, which is where we use alpha and the loss values:
-\[
-(\text{Current Color Weight}) - (\alpha * \text{Gradient of Loss of Color})
-\]
-This is what is used to update the weights of the colors and is returned after all the trials. Note the alpha and initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway and the training was fast, so more was done. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent where it uses them to complete the picture.
-
+This is what is used to update and return the weights of the colors after all the trials. Note $\alpha$ and the initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway and the training was fast, so more was done. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent, where it uses them to complete the picture.
+\pagebreak
+\subsection{The Results}
 The result of the Advanced AI is shown in Figure 3.
 
 \begin{figure}[h]
@@ -164,7 +194,7 @@ Advanced Agent
 \caption{Wow, such beauty, much shading, many wows.}
 \end{figure}
 
-In terms of quality, it definitely has more colors than the basic agent and, aesthetically speaking, it looks much better than the, err... abstract art doge. The advanced agent colors and shades the doge really well, loses the black border surrounding the right-half of the picture, and, in terms of time, it complete the doge faster than the basic agent. The basic agent takes around 7 minutes to complete its picture whereas the advanced agent took only 30 seconds to a minute to complete with a better quality. Given how both used the same picture and the way both agents completed the doge, it seemed fair to say the basic agent was not as capable as the advanced agent, but both did their jobs well. With how well the advanced agent does, it was given the name \textbf{Stronk Vectoral Weightroom}, or \textbf{SVW}.
+In terms of quality, it definitely has more colors than the basic agent and, aesthetically speaking, it looks much better than the, err... abstract art doge. The advanced agent colors and shades the doge really well and, in terms of time, completes the doge faster than the basic agent. The basic agent takes around 7 minutes to complete its picture whereas the advanced agent took only 30 seconds to a minute to complete with a better quality. Given how both used the same picture and the way both agents completed the doge, it seemed fair to say the basic agent was not as capable as the advanced agent, but both did their jobs well. With how well the advanced agent does, it was given the name \textbf{Stronk Vectoral Weightroom}, or \textbf{SVW}.
 
 However, should there be enough time and resources to complete this (and not a span of two to three weeks because of unfortunate college classes), there would be plans to use neural networks to color the image. There would also be plans to make the algorithm faster (faster than 30 seconds because there is never anything wrong with faster) and test it on more than just doge.
 

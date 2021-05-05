@@ -88,11 +88,37 @@ def weightFitting(image):
 
     return the weights of the colors' models
 \end{verbatim}
+
+The loss function is defined as:
+\[
+\text{Loss} = (\text{r} - 255\text{sigmoid(Rx)})^2
+\]
+
+And sigmoid is defined as:
+\[
+\text{sigmoid} = \frac{1}{1 - e^{-x}}
+\]
+\[
+\text{sigmoid' (Derivative of sigmoid)} = \text{sigmoid} * (1 - \text{sigmoid}) \text{ or} -\frac{e^{-x}}{(1 - e^{-x})^2}
+\]
+
+By plugging in the sigmoid into the defined loss function and taking the derivative:
+
+\[
+\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) (-\frac{e^{-Rx}}{(1 - e^{-Rx})^2})\text{Rx'}
+\]
+
+Rx is the dot product between the weights of a color model (red, blue, green) and the grayscale, and the derivative of a dot product is:
+\[
+\text{Rx'} = \frac{d(\text{grayscale})}{dx}\text{weights} + \frac{d(\text{weights})}{dx}\text{grayscale}
+\]
+
 Note that the gradient of the loss function is calculated by the formula:
 \[
 (\text{predicted} - \text{actual})*(\text{predicted})*(1 - \frac{\text{predicted}}{255.0}) * \text{grayscale value}
 \]
-The predicted color value(for each color) is:
+
+Which was shown in doing the above calculations and by plugging in the values we were given. The predicted color value(for each color) is:
 \[
 R = \frac{255.0}{(1 - e^{dotP(wR, gray)})}
 \]

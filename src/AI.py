@@ -19,10 +19,13 @@ def getPatchSubsample(grayIm, im_width, im_height):
 def advancedAgent(image):
     im_width, im_height = image.size
     wR, wG, wB = train.weightFitting(image)
+    ogIm = np.array(image)
     grayIm = np.array(ImageOps.grayscale(image))
     coloredIm = clusterColors = np.zeros((im_height,im_width,3), dtype=np.uint8)
     for u in range(1, im_height - 1):
-        for v in range(1, im_width - 1):
+        for v in range(1, im_width // 2):
+            coloredIm[u][v] = ogIm[u][v]
+        for v in range(im_width // 2, im_width - 1):
             gray = [1]
             for x in range(-1,2):
                 for y in range(-1,2):

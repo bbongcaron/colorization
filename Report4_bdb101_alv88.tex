@@ -105,13 +105,22 @@ And sigmoid is defined as:
 By plugging in the sigmoid into the defined loss function and taking the derivative:
 
 \[
-\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) (-\frac{e^{-Rx}}{(1 - e^{-Rx})^2})\text{Rx'}
+\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) \text{sigmoid'(Rx)}\text{R'x}
 \]
 
 Rx is the dot product between the weights of a color model (red, blue, green) and the grayscale, and the derivative of a dot product is:
+
 \[
-\text{Rx'} = \frac{d(\text{grayscale})}{dx}\text{weights} + \frac{d(\text{weights})}{dx}\text{grayscale}
+\text{R'x} = \frac{d(\text{grayscale})}{dx}\text{weights} + \frac{d(\text{weights})}{dx}\text{grayscale}
 \]
+
+But with the dot product, taking the derivative of the dot product with respect to x causes R'x to simply return $w_x g_x$ (with w meaning weight and g meaning grayscale value), so, we can plug this in:
+
+\[
+\text{Loss'} = 2(r - 255\text{sigmoid(Rx)}) (-255) \text{sigmoid'(Rx)}w_x g_x
+\]
+
+This is the derivative of the loss function.
 
 Note that the gradient of the loss function is calculated by the formula:
 \[
@@ -155,7 +164,7 @@ Advanced Agent
 \caption{Wow, such beauty, much shading, many wows.}
 \end{figure}
 
-In terms of quality, it definitely has more colors than the basic agent and, aesthetically speaking, it looks much better than the, err... abstract art doge. The advanced agent colors and shades the doge really well, loses the black border surrounding the right-half of the picture, and, in terms of time, it complete the doge faster than the basic agent. The basic agent takes around 7 minutes to complete its picture whereas the advanced agent took only 30 seconds to a minute to complete with a better quality. Given how both used the same picture and the way both agents completed the doge, it seemed fair to say the basic agent was not as capable as the advanced agent, but both did their jobs well.
+In terms of quality, it definitely has more colors than the basic agent and, aesthetically speaking, it looks much better than the, err... abstract art doge. The advanced agent colors and shades the doge really well, loses the black border surrounding the right-half of the picture, and, in terms of time, it complete the doge faster than the basic agent. The basic agent takes around 7 minutes to complete its picture whereas the advanced agent took only 30 seconds to a minute to complete with a better quality. Given how both used the same picture and the way both agents completed the doge, it seemed fair to say the basic agent was not as capable as the advanced agent, but both did their jobs well. With how well the advanced agent does, it was given the name \textbf{Stronk Vectoral Weightroom}, or \textbf{SVW}.
 
 However, should there be enough time and resources to complete this (and not a span of two to three weeks because of unfortunate college classes), there would be plans to use neural networks to color the image. There would also be plans to make the algorithm faster (faster than 30 seconds because there is never anything wrong with faster) and test it on more than just doge.
 

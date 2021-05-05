@@ -37,32 +37,46 @@ To test out our algorithms to see how well it does, we have to use a common imag
 To start, the basic agent was necessary as a baseline of how well our advanced algorithm works. The basic agent begins with clustering the colors into 5 best representative colors using k-Nearest Neighbors calculations. Then, the basic agent has 2 arrays, one a grayscale verison of the doge, the other the original image. Using the left half of the grayscale image as training, it replaces 3x3 patches with one of the representative colors accordingly. Then it goes to the right half and tries to fill in the rest of the colors based on what it learned through the training, with a black border around the right half because of how some tiles do not give enough information to complete the image. The result is the following:
 
 \begin{figure}[h]
+\begin{minipage}[c]{0.5\textwidth}
 \centering
-\includegraphics[scale=0.80]{images/basic.jpg}
+\includegraphics[scale=0.94]{images/smolDoge.jpg}
+\begin{center}
+Original
+\end{center}
+\end{minipage}
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[scale=0.70]{images/basic.jpg}
+\begin{center}
+Basic Agent
+\end{center}
+\end{minipage}
 \caption{Colors Much, Beauty Such, Woah.}
 \end{figure}
-
 \section{The Advanced Agent}
 The newest question then becomes: can we create something that beats a 5-Nearest Neighbor calculation and create a better image than the basic agent? The answer was a simple one, there always was a way to beat it, specifically, using logistic regression. We do this using a method called in AI.py, named weightFitting:
 
 \begin{verbatim}
 def weightFitting(image):
-    variables height and width are set equal to the size of the image
-    make a variable an array representation of the image
-    make a variable an array representation of the grayscale image
+    im_width, im_height <- image.size
+    rgbMatrix <- numpy matrix form of image
+    grayIm <- numpy matrix form of grayscale image
     alpha = 0.0001
-    Weight of Red, Blue, and Green equal to an array with 10 slots, each with 0.5 value.
+    wR <- initialization of all weights for "red" model to 0.5
+    wG <- initialization of all weights for "blue" model to 0.5
+    wB <- initialization of all weights for "green" model to 0.5
     for 150000 rounds of training:
-        select a random pixel
-        select random values for r,g,b
+        randPixel <- random pixel on LEFT side of image
+        r, g, b <- RGB values of randPixel
         gray = [1]
-        for one row below and above:
-            for one column behind and ahead:
-                append the random pixel area into gray
-
-        Rx = sum of weightedRed * gray for all values in the weightedRed
-        Gx = sum of weightedGreen * gray for all values in the weightedGreen
-        Bx = sum of weightedBlue * gray for all values in the weightedBlue
+        for x in range(-1,2):
+             for y in range(-1,2):
+                  currentPixel <- (randPixel[0]+x, randPixel[1]+y) 
+                  gray.append(grayscale value, divded by 255, of currentPixel)
+        # Note that dotP() means dot product
+        Rx = dotP(wR, gray)
+        Gx = dotP(wG, gray)
+        Bx = dotP(wB, gray)
 
         predR = 255.0 / (1 + exp(-1 * Rx))
         Do the above calculation for the other two colors
@@ -70,36 +84,48 @@ def weightFitting(image):
         gLossR = [(predR - r)*predR*(1 - predR/255.0)*gray[i] for i in range(len(gray))]
         Do the above calculation for the other two colors
 
-        update the weighted values of each color
+        update the weights of the colors' models
 
-    return the weights of the colors
+    return the weights of the colors' models
 \end{verbatim}
-
-Note that the loss function is calculated by the formula:
-
+Note that the gradient of the loss function is calculated by the formula:
 \[
-\frac{(\text{Pred Color Value} - \text{Real Color Value})*(Pred Color Value)*(1 - \text{Pred Color Value})}{255.0} * \text{Gray Array Value}
+(\text{predicted} - \text{actual})*(\text{predicted})*(1 - \frac{\text{predicted}}{255.0}) * \text{grayscale value}
 \]
-
-And it is done for every value in the gray array. The predicted color value is done by:
-
+The predicted color value(for each color) is:
 \[
-\frac{255.0}{(1 - e^\text{-Color Sum})}
+R = \frac{255.0}{(1 - e^{dotP(wR, gray)})}
 \]
-
+\[
+G = \frac{255.0}{(1 - e^{dotP(wG, gray)})}
+\]
+\[
+B = \frac{255.0}{(1 - e^{dotP(wB, gray)})}
+\]
+where dotP() denotes dot product.
 Note the Color Sum where is says "Rx", "Gx", and "Bx" in the code. After doing all of this, one update is done on all of the weighted values of the colors, which is where we use alpha and the loss values:
-
 \[
-(\text{Current Color Weight}) - (\alpha * \text{Loss Value of Color})
+(\text{Current Color Weight}) - (\alpha * \text{Gradient of Loss of Color})
 \]
-
 This is what is used to update the weights of the colors and is returned after all the trials. Note the alpha and initial weight values seen within the code were found by performing many tests and checking various values before settling on the current values seen. As for the training, more was better since the weights was going converge anyway and the training was fast, so more was done. This concludes the function weightFitting, with the weights of the colors returned to the advanced agent where it uses them to complete the picture.
 
 The result of the Advanced AI is the following:
 
 \begin{figure}[h]
+\begin{minipage}[c]{0.5\textwidth}
 \centering
-\includegraphics[scale=0.70]{images/advanced.jpg}
+\includegraphics[scale=0.94]{images/smolDoge.jpg}
+\begin{center}
+Original
+\end{center}
+\end{minipage}
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[scale=0.70]{images/advanced_v4.jpg}
+\begin{center}
+Advanced Agent
+\end{center}
+\end{minipage}
 \caption{Wow, such beauty, much shading, many wows.}
 \end{figure}
 
@@ -109,8 +135,7 @@ However, should there be enough time and resources to complete this (and not a s
 
 \section{Contributions}
 \subsection*{Brenton Bongcaron [bdb101], Section 3}
-
-
+I coded the clustering, the basic agent, and the advanced agent. I also made edits to the \LaTeX\: document.
 \subsection*{Abe Vitangcol [alv88], Section 8}
 I completed this \LaTeX\: document and did some proofreading and commenting on the code. Wording the \LaTeX\: document was something both my partner and I agreed I liked doing as well as having fun with the doge memes here. Unfortunately, many things came up on my end (mainly affecting my mental health) and thus I wasn't able to work on this project as much as I wanted to. Many apologies to my partner for being unable to help well on this one.
 \end{document}
